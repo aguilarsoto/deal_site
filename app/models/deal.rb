@@ -2,6 +2,7 @@ class Deal < ActiveRecord::Base
   belongs_to :advertiser
 
   validates_presence_of :advertiser, :value, :price, :description, :start_at, :end_at
+  scope :include_advertisers_and_publishers, includes({:advertiser => :publisher})
 
   def over?
     Time.zone.now > end_at

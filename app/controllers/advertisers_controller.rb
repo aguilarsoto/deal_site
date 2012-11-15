@@ -1,4 +1,5 @@
 class AdvertisersController < ApplicationController
+  cache_sweeper :deal_sweeper 
   def index
     @publisher = Publisher.find(params[:publisher_id])
     @advertisers = @publisher.advertisers

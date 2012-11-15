@@ -1,9 +1,12 @@
 class DealsController < ApplicationController
   before_filter :assign_deal, only: [ :show, :edit, :update, :destroy ]
   before_filter :set_view_paths, only: :show
+  caches_page :index
+  cache_sweeper :deal_sweeper 
+ 
 
   def index
-    @deals = Deal.all
+    @deals = Deal.include_advertisers_and_publishers.all
   end
 
   def show
