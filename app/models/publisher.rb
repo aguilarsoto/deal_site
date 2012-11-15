@@ -6,10 +6,17 @@ class Publisher < ActiveRecord::Base
 
   validate :parent_is_another_publisher
 
+  delegate :name, :to => :parent, :prefix => true, :allow_nil => true
+  delegate :theme, :to => :parent, :prefix => true, :allow_nil => true
+
   def parent_is_another_publisher
     if parent && parent == self
       errors.add :parent, " cannot be self"
     end
     true
+  end
+
+  def full_name
+    parent_name ? "#{parent_name} #{name}" : name
   end
 end

@@ -1,9 +1,12 @@
 class DealsController < ApplicationController
   before_filter :assign_deal, only: [ :show, :edit, :update, :destroy ]
   before_filter :set_view_paths, only: :show
+  caches_page :index
+  cache_sweeper :deal_sweeper 
+ 
 
   def index
-    @deals = Deal.all
+    @deals = Deal.include_advertisers_and_publishers.all
   end
 
   def show
@@ -49,6 +52,13 @@ class DealsController < ApplicationController
   end
 
   def set_view_paths
-    prepend_view_path "app/themes/#{@deal.advertiser.publisher.theme}/views"
+    
+    if File.directory? "app/themes/#{@deal.advertiser.publisher.theme}"
+      prepend_view_path "app/themes/#{@deal.advertiser.publisher.theme}/views"
+    elsif File.directory? "app/themes/#{@deal.advertiser.publisher.parent_theme}"
+      prepend_view_path "app/themes/#{@deal.advertiser.publisher.parent_theme}/views"
+    else
+      prepend_view_path "app/themes/entertainment/views"
+    end
   end
 end

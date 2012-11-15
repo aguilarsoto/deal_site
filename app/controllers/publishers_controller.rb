@@ -1,4 +1,5 @@
 class PublishersController < ApplicationController
+  cache_sweeper :deal_sweeper 
   def index
     @publishers = Publisher.all
   end
