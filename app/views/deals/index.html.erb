@@ -23,7 +23,7 @@
       <td><%= deal.price %></td>
       <td><%= deal.description %></td>
       <td><%= deal.advertiser.name %></td>
-      <td><%= deal.advertiser.publisher.try(:parent).try(:name) %> <%= deal.advertiser.publisher.name %></td>
+      <td><%= deal.advertiser.publisher.full_name %></td>
       <td><%= link_to 'Show', deal %></td>
       <td><%= link_to 'Edit', edit_deal_path(deal) %></td>
       <td><%= link_to 'Destroy', deal, confirm: 'Are you sure?', method: :delete %></td>

@@ -28,12 +28,31 @@ class DealsControllerTest < ActionController::TestCase
     assert_template "layouts/deals/show"
   end
 
-  test "should use themed template to show deal" do
+  test "should use themed template to show deal if available" do
     publisher = FactoryGirl.create(:publisher, theme: "wcax")
     advertiser = FactoryGirl.create(:advertiser, publisher: publisher)
     get :show, id: FactoryGirl.create(:deal, advertiser: advertiser).to_param
     assert_response :success
     assert_select "h1", text: "Jump On It"
+  end
+
+  test "should try to use parents theme if available" do
+    publisher_parent = FactoryGirl.create(:publisher, theme: "wcax")
+    publisher = FactoryGirl.create(:publisher, theme: "not_available", parent: publisher_parent)
+    advertiser = FactoryGirl.create(:advertiser, publisher: publisher)
+    get :show, id: FactoryGirl.create(:deal, advertiser: advertiser).to_param
+    assert_response :success
+    assert_select "h1", text: "Jump On It"
+  end
+
+  test "when everything fails default to entretainment" do
+    publisher_parent = FactoryGirl.create(:publisher, theme: "not_here")
+    publisher = FactoryGirl.create(:publisher, theme: "not_available", parent: publisher_parent)
+    advertiser = FactoryGirl.create(:advertiser, publisher: publisher)
+    deal = FactoryGirl.create(:deal, advertiser: advertiser)
+    get :show, id: deal.to_param
+    assert_response :success
+    assert_select "h1", text: deal.proposition
   end
 
   test "should get edit" do

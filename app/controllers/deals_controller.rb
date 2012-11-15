@@ -52,6 +52,13 @@ class DealsController < ApplicationController
   end
 
   def set_view_paths
-    prepend_view_path "app/themes/#{@deal.advertiser.publisher.theme}/views"
+    
+    if File.directory? "app/themes/#{@deal.advertiser.publisher.theme}"
+      prepend_view_path "app/themes/#{@deal.advertiser.publisher.theme}/views"
+    elsif File.directory? "app/themes/#{@deal.advertiser.publisher.parent_theme}"
+      prepend_view_path "app/themes/#{@deal.advertiser.publisher.parent_theme}/views"
+    else
+      prepend_view_path "app/themes/entertainment/views"
+    end
   end
 end
