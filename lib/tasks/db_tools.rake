@@ -1,21 +1,36 @@
 namespace :db_tools do
-  desc "load_publishers_data, loads the publishers file into our db"
-  task :load_publishers_data  => :environment do
+  desc "load a nonstandard (ugly) file from the publishers to the db"
+  task :load_publishers_data_nonstandard => :environment do
+    file_name = ask "Where is the File you want to load: "
+    raise "File missing" unless File.file? file_name
+    file = File.new(file_name, "r")
+    header = ask ("does your file has a header?[y/n]: ")
+    publisher= get_publisher
+    header_line = split_line(file.gets.chomp) if header
+    match_hash = set_row_matching(header, header_line)
+    while (line = file.gets)
+      line.chomp!
+      if line =~ /^(.+?)\s+(\d+\/\d+\/\d+)\s+(\d+\/\d+\/\d+)?\s+(.+?)\s+(\d+)\s+(\d+).*$/
+        line_hash = match_hash.clone
+        line_hash.each do |key, value|
+          line_hash[key] = $~[value]
+        end
+        advertiser = create_advertiser(publisher, line_hash)
+        create_deals(advertiser, line_hash)
+      end 
+    end
+  end
+  
+  desc "load_publishers_data, loads a standard csv or tsv file from the publishers into our db"
+  task :load_publishers_data_standard  => :environment do
     file_name = ask "Where is the File you want to load: "
     raise "File missing" unless File.file? file_name
     file = File.new(file_name, "r")
     format = menu("tell us the file format: ", {'tsv' => "Tab separated values", 'csv' => "comma separated values"})
     header = ask ("does your file has a header?[y/n]: ")
-    publisher=nil
-    if ask("do you want to create a new publisher[y/n]: ").downcase == 'y'
-      publisher_name = ask "what is the publishers name: "
-      publisher = Publisher.create(:name => publisher_name)
-    else
-      publisher_id = menu("then pick an existing publisher: ", Hash[Publisher.all.map{|p| [p.id.to_s, p.name]}])
-      publisher = Publisher.find(publisher_id)
-    end
+    publisher= get_publisher
     header_line = split_line(file.gets.chomp, format) if header
-    match_hash = set_row_matching(header, header_line)
+    match_hash = set_row_matching(header, header_linei, true)
     while (line = file.gets)
       line.chomp!
       line_hash = match_hash.clone
@@ -47,11 +62,13 @@ namespace :db_tools do
     selected
   end
 
-  def split_line line, format
+  def split_line line, format=nil
     if format == 'tsv'
       line.split(/\t/)
-    else 
+    elsif format == 'csv' 
       line.split(/,/)
+    else
+      line.split(/\s+/)
     end
   end
 
@@ -67,7 +84,7 @@ namespace :db_tools do
       :end_at => line_hash[:end_at])
   end
 
-  def set_row_matching header, header_line
+  def set_row_matching header, header_line, standard=false
     puts "As a guide here is your header line positions"
     match_hash = {:name => "Advertisers's Name: ",
                   :value => "Deal's Value",
@@ -76,12 +93,22 @@ namespace :db_tools do
                   :start_at => "Deal's Start Date",
                   :end_at => "Deal's End Date"}
     header_line.each_with_index do |option, position|
-      puts "#{position}. #{option}"
+      puts "#{standard ? position : position+1}. #{option}"
     end
     match_hash.each do |key, value|
       match_hash[key] = ask("What line corresponds to #{value}: ").to_i
     end
     match_hash
+  end
+
+  def get_publisher
+    if ask("do you want to create a new publisher[y/n]: ").downcase == 'y'
+      publisher_name = ask "what is the publishers name: "
+      Publisher.create(:name => publisher_name)
+    else
+      publisher_id = menu("then pick an existing publisher: ", Hash[Publisher.all.map{|p| [p.id.to_s, p.name]}])
+      Publisher.find(publisher_id)
+    end
   end
 
 end
