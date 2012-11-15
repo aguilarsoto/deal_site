@@ -18,4 +18,5 @@ group :test do
   gem "timecop"
   gem "shoulda"
   gem 'shoulda-context'
+  gem 'timecop'
 end
